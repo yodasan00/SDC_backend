@@ -243,7 +243,7 @@ class DITDashboardStatsAPIView(APIView):
 
     def get(self, request):
         data = {
-            "pending_approval": Ticket.objects.filter(status="PENDING").count(),
+            "pending": Ticket.objects.filter(status="PENDING").count(),
             "approved": Ticket.objects.filter(status="APPROVED").count(),
             "rejected": Ticket.objects.filter(status="REJECTED").count(),
             "total_tickets": Ticket.objects.count(),
