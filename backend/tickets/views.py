@@ -1,7 +1,9 @@
+from django.shortcuts import get_object_or_404
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework.response import Response
+from django.db.models import Q
 
 from .models import Ticket, TicketComment, TicketAuditLog
 from .serializers import (
@@ -114,6 +116,15 @@ class RejectTicketAPIView(APIView):
             {"message": "Ticket rejected successfully"},
             status=status.HTTP_200_OK
         )
+class DitHistoryAPIView(generics.ListAPIView):
+    serializer_class = TicketSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # CHANGED: 'updated_at' -> 'created_at'
+        return Ticket.objects.filter(
+            Q(status='APPROVED') | Q(status='REJECTED') | Q(status='COMPLETED') | Q(status='IN_PROGRESS')
+        ).order_by('-created_at')
 
 
 # =====================================================
@@ -126,6 +137,13 @@ class ApprovedTicketsAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return Ticket.objects.filter(status='APPROVED')
+    
+class InProgressTicketsAPIView(generics.ListAPIView):
+    serializer_class = TicketSerializer
+    permission_classes = [IsAuthenticated, IsSDCUser]
+
+    def get_queryset(self):
+        return Ticket.objects.filter(status='IN_PROGRESS')
 
 
 class StartWorkAPIView(APIView):
@@ -186,19 +204,32 @@ class CompleteTicketAPIView(APIView):
             {"message": "Ticket completed successfully"},
             status=status.HTTP_200_OK
         )
+class SdcHistoryAPIView(generics.ListAPIView):
+    serializer_class = TicketSerializer
+    permission_classes = [IsAuthenticated]
 
+    def get_queryset(self):
+        return Ticket.objects.filter(status='COMPLETED').order_by('-created_at')
 
 # =====================================================
 # PHASE 6 – COMMENTS & AUDIT LOGS
 # =====================================================
+
+# class AddCommentAPIView(generics.CreateAPIView):
+#     serializer_class = TicketCommentSerializer
+#     permission_classes = [IsAuthenticated]
+
+#     def perform_create(self, serializer):
+#         serializer.save(user=self.request.user)
 
 class AddCommentAPIView(generics.CreateAPIView):
     serializer_class = TicketCommentSerializer
     permission_classes = [IsAuthenticated]
 
     def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
+        ticket_id = self.kwargs['ticket_id']
+        ticket_instance = get_object_or_404(Ticket, id=ticket_id)
+        serializer.save(user=self.request.user, ticket=ticket_instance)
 
 class TicketCommentsAPIView(generics.ListAPIView):
     serializer_class = TicketCommentSerializer
@@ -218,6 +249,11 @@ class TicketAuditLogAPIView(generics.ListAPIView):
         return TicketAuditLog.objects.filter(
             ticket_id=self.kwargs['ticket_id']
         )
+class TicketDetailAPIView(generics.RetrieveAPIView):
+    queryset = Ticket.objects.all()
+    serializer_class = TicketSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
 
 from django.db.models import Count
 

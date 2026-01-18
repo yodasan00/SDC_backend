@@ -20,7 +20,6 @@ class TicketSerializer(serializers.ModelSerializer):
             'created_by_name',
         ]
 
-        # 🔥 THIS IS THE FIX
         read_only_fields = [
             'created_by',
             'status',
@@ -40,12 +39,12 @@ class TicketSerializer(serializers.ModelSerializer):
 
 
 class TicketCommentSerializer(serializers.ModelSerializer):
-    user = serializers.StringRelatedField(read_only=True)
+    user = serializers.StringRelatedField(read_only=True) 
+    ticket = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
         model = TicketComment
-        fields = "__all__"
-        read_only_fields = ["user", "created_at"]
+        fields = ['id', 'ticket', 'user', 'comment', 'created_at']
 
 
 class TicketAuditLogSerializer(serializers.ModelSerializer):
