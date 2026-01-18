@@ -80,11 +80,11 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'SDC',
+        'NAME': 'sdc_db',
         'USER': 'postgres',
-        'PASSWORD': '22csec15',
+        'PASSWORD': 'norules0000',
         'HOST': 'localhost', 
-        'PORT': '5432',       
+        'PORT': '9999',       
     }
 }
 
