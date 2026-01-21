@@ -29,6 +29,8 @@ class Ticket(models.Model):
         max_length=20, choices=STATUS_CHOICES, default='PENDING'
     )
     domain = models.CharField(max_length=20, choices=DOMAIN_CHOICES, default='NONE')
+    attachment = models.FileField(upload_to='attachments/', blank=True, null=True)
+    pm_remarks = models.TextField(blank=True, null=True) 
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -57,6 +59,7 @@ class TicketAuditLog(models.Model):
     )
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     action = models.CharField(max_length=100)
+    remarks = models.TextField(blank=True, null=True)
     old_status = models.CharField(max_length=20, blank=True)
     new_status = models.CharField(max_length=20, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)

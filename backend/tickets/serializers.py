@@ -24,6 +24,7 @@ class TicketSerializer(serializers.ModelSerializer):
             'created_by',
             'status',
             'created_at',
+            'pm_remarks'
         ]
 
     def get_created_by_name(self, obj):

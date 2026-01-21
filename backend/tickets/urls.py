@@ -1,19 +1,12 @@
 from django.urls import path
 from .views import (
-<<<<<<< Updated upstream
-    CreateTicketAPIView, DitHistoryAPIView, MyTicketsAPIView, 
-=======
+
     CreateTicketAPIView, DomainListAPIView, MyTicketsAPIView, OfficerTicketListAPIView, 
->>>>>>> Stashed changes
     PendingTicketsAPIView, ApproveTicketAPIView, RejectTicketAPIView,
-    ApprovedTicketsAPIView, SdcHistoryAPIView, StartWorkAPIView, CompleteTicketAPIView,
+    ApprovedTicketsAPIView, RevertTicketAPIView,SdcHistoryAPIView, StartWorkAPIView, CompleteTicketAPIView,
     AddCommentAPIView, TicketCommentsAPIView, TicketAuditLogAPIView,
     DepartmentDashboardStatsAPIView, DITDashboardStatsAPIView, SDCDashboardStatsAPIView,
-<<<<<<< Updated upstream
-    SystemReportAPIView, InProgressTicketsAPIView, TicketDetailAPIView,
-=======
-    SystemReportAPIView,OfficerStatsAPIView, TicketDetailAPIView
->>>>>>> Stashed changes
+    SystemReportAPIView,OfficerStatsAPIView, TicketDetailAPIView,DitHistoryAPIView, InProgressTicketsAPIView
 )
 
 urlpatterns = [
@@ -35,6 +28,7 @@ urlpatterns = [
     path('<int:ticket_id>/start/', StartWorkAPIView.as_view(), name='start-ticket'),
     path('<int:ticket_id>/complete/', CompleteTicketAPIView.as_view(), name='complete-ticket'),
     path('dashboard/sdc/', SDCDashboardStatsAPIView.as_view(), name='sdc-stats'),
+    path('<int:ticket_id>/revert/', RevertTicketAPIView.as_view(), name='revert-ticket'),
     path('sdc/history/', SdcHistoryAPIView.as_view(), name='sdc-history'),
 
     # OFFICER (AUDIT) URLS
