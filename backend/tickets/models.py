@@ -12,6 +12,13 @@ class Ticket(models.Model):
         ('IN_PROGRESS', 'In Progress (SDC)'),
         ('COMPLETED', 'Completed'),
     )
+    DOMAIN_CHOICES = (
+    ('NONE', 'Unassigned'),
+    ('NETWORK', 'Network & Security'),
+    ('DB', 'Database Administration'),
+    ('SERVER', 'Server & Cloud'),
+    ('DEV', 'Software Development'),
+    )
 
     title = models.CharField(max_length=200)
     description = models.TextField()
@@ -21,6 +28,7 @@ class Ticket(models.Model):
     status = models.CharField(
         max_length=20, choices=STATUS_CHOICES, default='PENDING'
     )
+    domain = models.CharField(max_length=20, choices=DOMAIN_CHOICES, default='NONE')
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):

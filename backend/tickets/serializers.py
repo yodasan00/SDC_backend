@@ -35,9 +35,6 @@ class TicketSerializer(serializers.ModelSerializer):
 
 
 
-
-
-
 class TicketCommentSerializer(serializers.ModelSerializer):
     user = serializers.StringRelatedField(read_only=True) 
     ticket = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -53,3 +50,11 @@ class TicketAuditLogSerializer(serializers.ModelSerializer):
     class Meta:
         model = TicketAuditLog
         fields = "__all__"
+
+class TicketAssignSerializer(serializers.ModelSerializer):
+
+    domain = serializers.ChoiceField(choices=Ticket.DOMAIN_CHOICES)
+
+    class Meta:
+        model = Ticket
+        fields = ['domain']

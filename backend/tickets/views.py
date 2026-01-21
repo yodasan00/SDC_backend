@@ -1,4 +1,8 @@
 from django.shortcuts import get_object_or_404
+<<<<<<< Updated upstream
+=======
+from rest_framework import filters
+>>>>>>> Stashed changes
 from rest_framework import generics, status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.views import APIView
@@ -9,11 +13,13 @@ from .models import Ticket, TicketComment, TicketAuditLog
 from .serializers import (
     TicketSerializer,
     TicketCommentSerializer,
-    TicketAuditLogSerializer
+    TicketAuditLogSerializer,
+    TicketAssignSerializer
 )
 from .permissions import (
     IsDepartmentUser,
     IsDITUser,
+    IsOfficer,
     IsSDCUser
 )
 
@@ -50,6 +56,17 @@ class MyTicketsAPIView(generics.ListAPIView):
 # PHASE 3 – DIT APIs
 # =====================================================
 
+class DomainListAPIView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        domains = [
+            {"code": code, "label": label} 
+            for code, label in Ticket.DOMAIN_CHOICES 
+            if code != 'NONE' 
+        ]
+        return Response(domains)
+
 class PendingTicketsAPIView(generics.ListAPIView):
     serializer_class = TicketSerializer
     permission_classes = [IsAuthenticated, IsDITUser]
@@ -69,24 +86,30 @@ class ApproveTicketAPIView(APIView):
                 {"detail": "Ticket not found or already processed"},
                 status=status.HTTP_404_NOT_FOUND
             )
+        serializer = TicketAssignSerializer(data=request.data)
+        
+        if serializer.is_valid():
+            selected_domain = serializer.validated_data['domain']
+            
+            old_status = ticket.status
+            ticket.status = 'APPROVED'
+            ticket.domain = selected_domain 
+            ticket.save()
 
-        old_status = ticket.status
-        ticket.status = 'APPROVED'
-        ticket.save()
+            TicketAuditLog.objects.create(
+                ticket=ticket,
+                user=request.user,
+                action=f"Approved and forwarded to {selected_domain} Team",
+                old_status=old_status,
+                new_status="APPROVED"
+            )
 
-        TicketAuditLog.objects.create(
-            ticket=ticket,
-            user=request.user,
-            action="Approved ticket",
-            old_status=old_status,
-            new_status="APPROVED"
-        )
-
-        return Response(
-            {"message": "Ticket approved successfully"},
-            status=status.HTTP_200_OK
-        )
-
+            return Response(
+                {"message": f"Ticket approved and forwarded to {selected_domain} team successfully"},
+                status=status.HTTP_200_OK
+            )
+        
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class RejectTicketAPIView(APIView):
     permission_classes = [IsAuthenticated, IsDITUser]
@@ -136,6 +159,7 @@ class ApprovedTicketsAPIView(generics.ListAPIView):
     permission_classes = [IsAuthenticated, IsSDCUser]
 
     def get_queryset(self):
+<<<<<<< Updated upstream
         return Ticket.objects.filter(status='APPROVED')
     
 class InProgressTicketsAPIView(generics.ListAPIView):
@@ -144,6 +168,17 @@ class InProgressTicketsAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return Ticket.objects.filter(status='IN_PROGRESS')
+=======
+        user = self.request.user
+        
+        if user.domain == 'NONE':
+            return Ticket.objects.none()
+
+        return Ticket.objects.filter(
+            status='APPROVED',
+            domain=user.domain  
+        )
+>>>>>>> Stashed changes
 
 
 class StartWorkAPIView(APIView):
@@ -151,10 +186,14 @@ class StartWorkAPIView(APIView):
 
     def post(self, request, ticket_id):
         try:
-            ticket = Ticket.objects.get(id=ticket_id, status='APPROVED')
+            ticket = Ticket.objects.get(
+                id=ticket_id, 
+                status='APPROVED',
+                domain=request.user.domain
+            )
         except Ticket.DoesNotExist:
             return Response(
-                {"detail": "Ticket not found or not approved"},
+                {"detail": "Ticket not found, not approved, or belongs to another domain"},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -175,16 +214,19 @@ class StartWorkAPIView(APIView):
             status=status.HTTP_200_OK
         )
 
-
 class CompleteTicketAPIView(APIView):
     permission_classes = [IsAuthenticated, IsSDCUser]
 
     def post(self, request, ticket_id):
         try:
-            ticket = Ticket.objects.get(id=ticket_id, status='IN_PROGRESS')
+            ticket = Ticket.objects.get(
+                id=ticket_id, 
+                status='IN_PROGRESS',
+                domain=request.user.domain 
+            )
         except Ticket.DoesNotExist:
             return Response(
-                {"detail": "Ticket not found or not in progress"},
+                {"detail": "Ticket not found, not in progress, or belongs to another domain"},
                 status=status.HTTP_404_NOT_FOUND
             )
 
@@ -204,9 +246,41 @@ class CompleteTicketAPIView(APIView):
             {"message": "Ticket completed successfully"},
             status=status.HTTP_200_OK
         )
+<<<<<<< Updated upstream
 class SdcHistoryAPIView(generics.ListAPIView):
     serializer_class = TicketSerializer
     permission_classes = [IsAuthenticated]
+=======
+# =====================================================
+# PHASE 5 – OFFICER APIs (Audit & Search)
+# =====================================================
+
+class OfficerStatsAPIView(APIView):
+    permission_classes = [IsAuthenticated, IsOfficer]
+
+    def get(self, request):
+        data = {
+            "total_tickets": Ticket.objects.count(),
+            "pending": Ticket.objects.filter(status="PENDING").count(),
+            "approved": Ticket.objects.filter(status="APPROVED").count(),
+            "rejected": Ticket.objects.filter(status="REJECTED").count(),
+            "in_progress": Ticket.objects.filter(status="IN_PROGRESS").count(),
+            "completed": Ticket.objects.filter(status="COMPLETED").count(),
+        }
+        return Response(data)
+
+
+class OfficerTicketListAPIView(generics.ListAPIView):
+    serializer_class = TicketSerializer
+    permission_classes = [IsAuthenticated, IsOfficer]
+    
+    filter_backends = [filters.SearchFilter]
+    
+    search_fields = ['title', 'description', 'status', 'domain', 'id']
+
+    def get_queryset(self):
+        return Ticket.objects.all().order_by('-created_at')
+>>>>>>> Stashed changes
 
     def get_queryset(self):
         return Ticket.objects.filter(status='COMPLETED').order_by('-created_at')
@@ -215,6 +289,7 @@ class SdcHistoryAPIView(generics.ListAPIView):
 # PHASE 6 – COMMENTS & AUDIT LOGS
 # =====================================================
 
+<<<<<<< Updated upstream
 # class AddCommentAPIView(generics.CreateAPIView):
 #     serializer_class = TicketCommentSerializer
 #     permission_classes = [IsAuthenticated]
@@ -222,6 +297,14 @@ class SdcHistoryAPIView(generics.ListAPIView):
 #     def perform_create(self, serializer):
 #         serializer.save(user=self.request.user)
 
+=======
+class TicketDetailAPIView(generics.RetrieveAPIView):
+    queryset = Ticket.objects.all()
+    serializer_class = TicketSerializer
+    permission_classes = [IsAuthenticated]
+    lookup_field = 'id'
+    
+>>>>>>> Stashed changes
 class AddCommentAPIView(generics.CreateAPIView):
     serializer_class = TicketCommentSerializer
     permission_classes = [IsAuthenticated]
@@ -230,6 +313,10 @@ class AddCommentAPIView(generics.CreateAPIView):
         ticket_id = self.kwargs['ticket_id']
         ticket_instance = get_object_or_404(Ticket, id=ticket_id)
         serializer.save(user=self.request.user, ticket=ticket_instance)
+<<<<<<< Updated upstream
+=======
+
+>>>>>>> Stashed changes
 
 class TicketCommentsAPIView(generics.ListAPIView):
     serializer_class = TicketCommentSerializer

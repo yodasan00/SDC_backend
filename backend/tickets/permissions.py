@@ -20,3 +20,7 @@ class IsSDCUser(BasePermission):
             request.user.is_authenticated and
             request.user.role == 'SDC'
         )
+
+class IsOfficer(BasePermission):
+    def has_permission(self, request, view):
+        return request.user.is_authenticated and request.user.role == 'OFFICER'
