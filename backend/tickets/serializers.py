@@ -19,6 +19,7 @@ class TicketSerializer(serializers.ModelSerializer):
             'created_by',
             'created_by_name',
             'domain',
+            'attachment',
         ]
 
         read_only_fields = [
