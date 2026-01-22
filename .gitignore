@@ -10,7 +10,10 @@ __pycache__/
 .env
 /staticfiles/
 /media/
-*migration.py
+# Django migration cache
+**/migrations/__pycache__/
+**/migrations/*.pyc
+
 
 
 # IDE

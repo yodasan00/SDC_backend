@@ -9,16 +9,6 @@ class User(AbstractUser):
         ('SDC', 'SDC Staff'),
         ('OFFICER', 'Officer'), #view only access
     )
-    DOMAIN_CHOICES = (
-    ('NONE', 'Unassigned'),
-    ('NETWORK', 'Network & Security'),
-    ('DB', 'Database Administration'),
-    ('SERVER', 'Server & Cloud'),
-    ('DEV', 'Software Development'),
-    )   
-
-<<<<<<< Updated upstream
-=======
     DEPARTMENT_CHOICES = (
         ('', 'None'),
         ('IT Dept', 'IT Dept'),
@@ -33,7 +23,6 @@ class User(AbstractUser):
     ('DEV', 'Software Development'),
     ) 
 
->>>>>>> Stashed changes
     domain = models.CharField(max_length=20, choices=DOMAIN_CHOICES, default='NONE')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
     phone_number = models.CharField(max_length=15, blank=True, null=True)
