@@ -325,7 +325,6 @@ class OfficerTicketListAPIView(generics.ListAPIView):
     search_fields = ['title', 'description', 'status', 'domain', 'id']
 
     def get_queryset(self):
-        # CORRECTED: Removed the duplicate method that filtered only 'COMPLETED'
         return Ticket.objects.all().order_by('-created_at')
 
 
