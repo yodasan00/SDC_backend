@@ -80,13 +80,17 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'SDC',
+        'NAME': 'sdc_dbms',
         'USER': 'postgres',
-        'PASSWORD': '22csec15',
+        'PASSWORD': 'norules0000',
         'HOST': 'localhost', 
-        'PORT': '5432',       
+        'PORT': '9999',       
     }
 }
+
+DEFAULT_PERMISSION_CLASSES = [
+    'rest_framework.permissions.IsAuthenticated',
+]
 
 
 # Password validation
@@ -133,10 +137,18 @@ AUTH_USER_MODEL = 'login.User'
 from datetime import timedelta
 
 REST_FRAMEWORK = {
+
+
+     'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
 }
+
+
+
 
 SIMPLE_JWT = {
     'ACCESS_TOKEN_LIFETIME': timedelta(minutes=60),
