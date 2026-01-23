@@ -754,3 +754,55 @@ class SystemReportAPIView(APIView):
             ).annotate(count=Count("id")),
         }
         return Response(data)
+    
+
+from rest_framework.generics import ListAPIView
+from rest_framework.permissions import IsAuthenticated
+from .models import TicketType, RequestType
+from .serializers import TicketTypeSerializer, RequestTypeSerializer
+
+
+class TicketTypeListAPIView(ListAPIView):
+    """
+    Dropdown API: Ticket Types
+    """
+    queryset = TicketType.objects.all().order_by('name')
+    serializer_class = TicketTypeSerializer
+    permission_classes = [IsAuthenticated]
+
+
+class RequestTypeListAPIView(ListAPIView):
+    """
+    Dropdown API: Request Types (filtered by Ticket Type)
+    """
+    serializer_class = RequestTypeSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        ticket_type_id = self.request.query_params.get('ticket_type')
+        if ticket_type_id:
+            return RequestType.objects.filter(ticket_type_id=ticket_type_id)
+        return RequestType.objects.none()
+    
+
+
+from rest_framework.response import Response
+from .models import Ticket
+
+
+class TicketPriorityListAPIView(APIView):
+    """
+    Dropdown API: Ticket Priorities (P1–P4)
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        priorities = [
+            {
+                "code": code,
+                "label": label
+            }
+            for code, label in Ticket.PRIORITY_CHOICES
+        ]
+        return Response(priorities)
+

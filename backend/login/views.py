@@ -7,39 +7,32 @@ from rest_framework.decorators import api_view, permission_classes, authenticati
 from rest_framework.permissions import AllowAny
 
 from .serializers import DepartmentUserRegistrationSerializer, UserSerializer
-from .models import User
+from .models import User, Department, Domain
 
 
-# ---------------- JWT TOKEN CUSTOMIZATION ----------------
 class CustomTokenSerializer(TokenObtainPairSerializer):
     @classmethod
     def get_token(cls, user):
-        # 1. ENCRYPT ROLE INTO TOKEN
-        # This allows Angular to read the role even after a page refresh
         token = super().get_token(user)
         token['role'] = user.role
         token['username'] = user.username
         return token
 
     def validate(self, attrs):
-        # 2. RETURN ROLE IN LOGIN RESPONSE
-        # This allows Angular to update the UI immediately upon login
         data = super().validate(attrs)
         data['role'] = self.user.role
         data['username'] = self.user.username
         return data
 
 
-# ---------------- LOGIN ----------------
 class LoginAPIView(TokenObtainPairView):
     serializer_class = CustomTokenSerializer
 
 
-# ---------------- REGISTRATION (PUBLIC) ----------------
 class RegistrationView(generics.CreateAPIView):
     serializer_class = DepartmentUserRegistrationSerializer
     permission_classes = [AllowAny]
-    authentication_classes = []  # 🔥 DISABLE JWT AUTH FOR REGISTER
+    authentication_classes = []
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -52,14 +45,12 @@ class RegistrationView(generics.CreateAPIView):
         }, status=status.HTTP_201_CREATED)
 
 
-# ---------------- LIST USERS (PROTECTED) ----------------
 class ListUsersAPIView(generics.ListAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
     permission_classes = [permissions.IsAuthenticated]
 
 
-# ---------------- UPDATE USER (PROTECTED) ----------------
 class UpdateUserAPIView(generics.RetrieveUpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserSerializer
@@ -67,26 +58,30 @@ class UpdateUserAPIView(generics.RetrieveUpdateAPIView):
     lookup_field = 'id'
 
 
-# ---------------- GET DEPARTMENTS (PUBLIC) ----------------
 @api_view(['GET'])
-@authentication_classes([])  # 🔥 DISABLE AUTH COMPLETELY
+@authentication_classes([])
 @permission_classes([AllowAny])
 def get_departments(request):
-    departments = [
-        choice[0]
-        for choice in User.DEPARTMENT_CHOICES
-        if choice[0]
-    ]
-    return Response(departments)
+    departments = Department.objects.all()
+    return Response([
+        {
+            "id": d.id,
+            "name": d.name
+        }
+        for d in departments
+    ])
 
 
-# ---------------- GET DOMAINS (PUBLIC) ----------------
 @api_view(['GET'])
-@authentication_classes([])  # 🔥 DISABLE AUTH COMPLETELY
+@authentication_classes([])
 @permission_classes([AllowAny])
 def get_domains(request):
-    domains = [
-        {"value": choice[0], "display": choice[1]}
-        for choice in User.DOMAIN_CHOICES
-    ]
-    return Response(domains)
+    domains = Domain.objects.all()
+    return Response([
+        {
+            "id": d.id,
+            "value": d.value,
+            "display": d.display
+        }
+        for d in domains
+    ])

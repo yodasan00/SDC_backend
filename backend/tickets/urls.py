@@ -61,7 +61,8 @@ from .views import (
     ApprovedTicketsAPIView, RevertTicketAPIView,SdcHistoryAPIView, StartWorkAPIView, CompleteTicketAPIView,
     AddCommentAPIView, TicketCommentsAPIView, TicketAuditLogAPIView,
     DepartmentDashboardStatsAPIView, DITDashboardStatsAPIView, SDCDashboardStatsAPIView,
-    SystemReportAPIView,OfficerStatsAPIView, TicketDetailAPIView,DitHistoryAPIView, InProgressTicketsAPIView
+    SystemReportAPIView,OfficerStatsAPIView, TicketDetailAPIView,DitHistoryAPIView, InProgressTicketsAPIView,
+    TicketTypeListAPIView, RequestTypeListAPIView, TicketPriorityListAPIView
 )
 
 urlpatterns = [
@@ -100,4 +101,12 @@ urlpatterns = [
     
     # --- Reports ---
     path('reports/system/', SystemReportAPIView.as_view(), name='system-report'),
+
+    
+    # --- Fetch Tickets ---
+    path('ticket-types/', TicketTypeListAPIView.as_view(), name='ticket-types'),
+    path('request-types/', RequestTypeListAPIView.as_view(), name='request-types'),
+
+    # Get Prorities
+    path('ticket-priorities/', TicketPriorityListAPIView.as_view(), name='ticket-priorities'),
 ]
