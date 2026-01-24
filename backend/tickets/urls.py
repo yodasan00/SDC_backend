@@ -56,9 +56,9 @@
 from django.urls import path
 from .views import (
 
-    CreateTicketAPIView, DomainListAPIView, MyTicketsAPIView, OfficerTicketListAPIView, 
+    CloseTicketAPIView, CreateTicketAPIView, DomainListAPIView, LogProgressAPIView, MyTicketsAPIView, OfficerTicketListAPIView, 
     PendingTicketsAPIView, ApproveTicketAPIView, RejectTicketAPIView,
-    ApprovedTicketsAPIView, RevertTicketAPIView,SdcHistoryAPIView, StartWorkAPIView, CompleteTicketAPIView,
+    ApprovedTicketsAPIView, ReopenTicketAPIView, RevertTicketAPIView,SdcHistoryAPIView, StartWorkAPIView, CompleteTicketAPIView,
     AddCommentAPIView, TicketCommentsAPIView, TicketAuditLogAPIView,
     DepartmentDashboardStatsAPIView, DITDashboardStatsAPIView, SDCDashboardStatsAPIView,
     SystemReportAPIView,OfficerStatsAPIView, TicketDetailAPIView,DitHistoryAPIView, InProgressTicketsAPIView,
@@ -78,6 +78,8 @@ urlpatterns = [
     path('<int:ticket_id>/reject/', RejectTicketAPIView.as_view(), name='reject-ticket'),
     path('dashboard/dit/', DITDashboardStatsAPIView.as_view(), name='dit-stats'),
     path('dit/history/', DitHistoryAPIView.as_view(), name='dit-history'),
+    path('<int:ticket_id>/close/', CloseTicketAPIView.as_view(),name='close-ticket'),
+    path('<int:ticket_id>/reopen/', ReopenTicketAPIView.as_view(), name='reopen-ticket'),
     # --- SDC ---
     path('approved/', ApprovedTicketsAPIView.as_view(), name='approved-tickets'),
     path('in-progress/', InProgressTicketsAPIView.as_view(), name='in-progress-tickets'),
@@ -86,6 +88,7 @@ urlpatterns = [
     path('dashboard/sdc/', SDCDashboardStatsAPIView.as_view(), name='sdc-stats'),
     path('<int:ticket_id>/revert/', RevertTicketAPIView.as_view(), name='revert-ticket'),
     path('sdc/history/', SdcHistoryAPIView.as_view(), name='sdc-history'),
+    path('<int:ticket_id>/log-progress/', LogProgressAPIView.as_view(),name='log-progress'),
 
     # OFFICER (AUDIT) URLS
     path('officer/stats/', OfficerStatsAPIView.as_view(), name='officer-stats'),

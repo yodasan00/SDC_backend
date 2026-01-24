@@ -126,6 +126,8 @@
 
 
 from rest_framework import serializers
+
+from login.models import Domain
 from .models import (
     Ticket,
     TicketComment,
@@ -201,11 +203,16 @@ class RequestTypeSerializer(serializers.ModelSerializer):
 
 
 class TicketAssignSerializer(serializers.ModelSerializer):
-    """
-    Used by DIT to assign domain while approving ticket
-    """
-    domain = serializers.ChoiceField(choices=Ticket.DOMAIN_CHOICES)
+    domain = serializers.SlugRelatedField(
+        slug_field='value', 
+        queryset=Domain.objects.all()
+    )
 
     class Meta:
-        model = Ticket
+        model = Ticket  # Point this to Ticket, not Domain
         fields = ['domain']
+
+class DomainSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Domain
+        fields = ['id', 'value', 'display']
