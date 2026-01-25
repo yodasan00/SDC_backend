@@ -1,9 +1,18 @@
 from rest_framework import serializers
-from .models import User, Department, Domain
+from django.contrib.auth import get_user_model
+from django.db.models import Q
+from rest_framework_simplejwt.tokens import RefreshToken
+from rest_framework.exceptions import AuthenticationFailed
 
+from .models import Department, Domain
 
+User = get_user_model()
+
+# ======================================================
+# REGISTRATION SERIALIZER
+# ======================================================
 class DepartmentUserRegistrationSerializer(serializers.ModelSerializer):
-    password = serializers.CharField(write_only=True)
+    password = serializers.CharField(write_only=True, min_length=6)
 
     class Meta:
         model = User
@@ -22,51 +31,95 @@ class DepartmentUserRegistrationSerializer(serializers.ModelSerializer):
         department = data.get('department_name')
         domain = data.get('domain')
 
+        # ---------------- ROLE VALIDATION ----------------
         if role not in dict(User.ROLE_CHOICES):
             raise serializers.ValidationError({
                 "role": "Invalid role selected."
             })
 
+        # ---------------- DEPARTMENT USER ----------------
         if role == 'DEPARTMENT':
-            if not department:
+            if department is None:
                 raise serializers.ValidationError({
                     "department_name": "Department is required for Department User."
                 })
-            if not Department.objects.filter(id=department.id).exists():
+            if not isinstance(department, Department):
                 raise serializers.ValidationError({
                     "department_name": "Invalid department selected."
                 })
 
-        if role == 'SDC':
-            if not domain:
+        # ---------------- SDC STAFF ----------------
+        elif role == 'SDC':
+            if domain is None:
                 raise serializers.ValidationError({
                     "domain": "Domain is required for SDC Staff."
                 })
-            if not Domain.objects.filter(id=domain.id).exists():
+            if not isinstance(domain, Domain):
                 raise serializers.ValidationError({
                     "domain": "Invalid domain selected."
                 })
 
-        if role not in ['DEPARTMENT', 'SDC']:
+        # ---------------- OTHER ROLES ----------------
+        else:
             data['department_name'] = None
             data['domain'] = None
 
         return data
 
     def create(self, validated_data):
-        user = User(
-            username=validated_data['username'],
-            email=validated_data.get('email'),
-            role=validated_data['role'],
-            phone_number=validated_data.get('phone_number'),
-            department_name=validated_data.get('department_name'),
-            domain=validated_data.get('domain')
-        )
-        user.set_password(validated_data['password'])
+        password = validated_data.pop('password')
+        user = User(**validated_data)
+        user.set_password(password)
         user.save()
         return user
 
 
+# ======================================================
+# LOGIN SERIALIZER (USERNAME / EMAIL / PHONE)
+# ======================================================
+class LoginSerializer(serializers.Serializer):
+    """
+    Clean login serializer:
+    - username OR email OR phone_number
+    - NO TokenObtainPairSerializer inheritance
+    - NO 'username required' bug
+    """
+
+    identifier = serializers.CharField()
+    password = serializers.CharField(write_only=True)
+
+    def validate(self, data):
+        identifier = data.get('identifier')
+        password = data.get('password')
+
+        try:
+            user = User.objects.get(
+                Q(username=identifier) |
+                Q(email=identifier) |
+                Q(phone_number=identifier)
+            )
+        except User.DoesNotExist:
+            raise AuthenticationFailed("Invalid credentials")
+
+        if not user.is_active:
+            raise AuthenticationFailed("User account is disabled")
+
+        if not user.check_password(password):
+            raise AuthenticationFailed("Invalid credentials")
+
+        refresh = RefreshToken.for_user(user)
+
+        return {
+            "refresh": str(refresh),
+            "access": str(refresh.access_token),
+            "username": user.username,
+            "role": user.role
+        }
+
+
+# ======================================================
+# USER LIST / DETAIL SERIALIZER
+# ======================================================
 class UserSerializer(serializers.ModelSerializer):
     role_display = serializers.CharField(
         source='get_role_display',

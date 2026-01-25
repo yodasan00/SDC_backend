@@ -8,7 +8,7 @@ from rest_framework.permissions import AllowAny
 
 from .serializers import DepartmentUserRegistrationSerializer, UserSerializer
 from .models import User, Department, Domain
-
+from rest_framework.views import APIView
 
 class CustomTokenSerializer(TokenObtainPairSerializer):
     @classmethod
@@ -25,8 +25,16 @@ class CustomTokenSerializer(TokenObtainPairSerializer):
         return data
 
 
-class LoginAPIView(TokenObtainPairView):
-    serializer_class = CustomTokenSerializer
+from .serializers import LoginSerializer
+
+
+class LoginAPIView(APIView):
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        serializer = LoginSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        return Response(serializer.validated_data)
 
 
 class RegistrationView(generics.CreateAPIView):
