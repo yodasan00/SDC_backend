@@ -158,6 +158,7 @@ class TicketSerializer(serializers.ModelSerializer):
             'created_by_name',
             'domain',
             'attachment',
+            'pm_remarks',
         ]
 
         read_only_fields = [

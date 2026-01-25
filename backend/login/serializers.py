@@ -3,6 +3,8 @@ from django.contrib.auth import get_user_model
 from django.db.models import Q
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
+
 
 from .models import Department, Domain
 
@@ -77,25 +79,31 @@ class DepartmentUserRegistrationSerializer(serializers.ModelSerializer):
 # ======================================================
 # LOGIN SERIALIZER (USERNAME / EMAIL / PHONE)
 # ======================================================
-class LoginSerializer(serializers.Serializer):
-    """
-    Clean login serializer:
-    - username OR email OR phone_number
-    - NO TokenObtainPairSerializer inheritance
-    - NO 'username required' bug
-    """
+# serializers.py (Keep your imports and Registration Serializer as they are)
 
-    identifier = serializers.CharField()
-    password = serializers.CharField(write_only=True)
+# ... existing imports ...
 
-    def validate(self, data):
-        identifier = data.get('identifier')
-        password = data.get('password')
+# ======================================================
+# LOGIN SERIALIZER (USERNAME / EMAIL / PHONE)
+# ======================================================
+class CustomTokenSerializer(TokenObtainPairSerializer):
+    
+    # 1. ADD THIS METHOD (moved from views.py)
+    # This ensures the 'role' is inside the encoded JWT token
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['role'] = user.role
+        token['username'] = user.username
+        return token
 
+    def validate(self, attrs):
+        identifier = attrs.get("username") 
+        password = attrs.get("password")
         try:
             user = User.objects.get(
-                Q(username=identifier) |
-                Q(email=identifier) |
+                Q(username__iexact=identifier) |
+                Q(email__iexact=identifier) |
                 Q(phone_number=identifier)
             )
         except User.DoesNotExist:
@@ -107,15 +115,13 @@ class LoginSerializer(serializers.Serializer):
         if not user.check_password(password):
             raise AuthenticationFailed("Invalid credentials")
 
-        refresh = RefreshToken.for_user(user)
-
-        return {
-            "refresh": str(refresh),
-            "access": str(refresh.access_token),
-            "username": user.username,
-            "role": user.role
-        }
-
+        data = super().validate({
+            "username": user.username, 
+            "password": password
+        })
+        data["username"] = user.username
+        data["role"] = user.role
+        return data
 
 # ======================================================
 # USER LIST / DETAIL SERIALIZER

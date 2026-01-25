@@ -5,36 +5,17 @@ from rest_framework import status, generics, permissions
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, permission_classes, authentication_classes
 from rest_framework.permissions import AllowAny
-
-from .serializers import DepartmentUserRegistrationSerializer, UserSerializer
 from .models import User, Department, Domain
 from rest_framework.views import APIView
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import (
+    DepartmentUserRegistrationSerializer, 
+    UserSerializer, 
+    CustomTokenSerializer 
+)
 
-class CustomTokenSerializer(TokenObtainPairSerializer):
-    @classmethod
-    def get_token(cls, user):
-        token = super().get_token(user)
-        token['role'] = user.role
-        token['username'] = user.username
-        return token
-
-    def validate(self, attrs):
-        data = super().validate(attrs)
-        data['role'] = self.user.role
-        data['username'] = self.user.username
-        return data
-
-
-from .serializers import LoginSerializer
-
-
-class LoginAPIView(APIView):
-    permission_classes = [AllowAny]
-
-    def post(self, request):
-        serializer = LoginSerializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-        return Response(serializer.validated_data)
+class LoginAPIView(TokenObtainPairView):
+    serializer_class = CustomTokenSerializer
 
 
 class RegistrationView(generics.CreateAPIView):

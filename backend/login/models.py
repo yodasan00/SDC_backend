@@ -27,8 +27,8 @@ class User(AbstractUser):
     )
 
     role = models.CharField(max_length=20, choices=ROLE_CHOICES)
-    phone_number = models.CharField(max_length=15, blank=True, null=True)
-
+    phone_number = models.CharField(unique= True, max_length=15, blank=True, null=True)
+    email = models.EmailField(unique=True, blank=True, null=False)
     department_name = models.ForeignKey(
         Department,
         on_delete=models.SET_NULL,

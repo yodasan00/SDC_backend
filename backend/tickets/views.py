@@ -218,7 +218,6 @@ class ApprovedTicketsAPIView(generics.ListAPIView):
             domain=user.domain  
         )
 
-# --- ADDED MISSING VIEW ---
 class InProgressTicketsAPIView(generics.ListAPIView):
     """ Active Tasks: Tickets currently being worked on by SDC """
     serializer_class = TicketSerializer
@@ -339,7 +338,7 @@ class SdcHistoryAPIView(generics.ListAPIView):
 
     def get_queryset(self):
         return Ticket.objects.filter(
-            status='COMPLETED',
+            status__in=['COMPLETED', 'CLOSED'],
             domain=self.request.user.domain
         ).order_by('-created_at')
 
@@ -461,6 +460,7 @@ class DITDashboardStatsAPIView(APIView):
             "rejected": Ticket.objects.filter(status="REJECTED").count(),
             "closed": Ticket.objects.filter(status="CLOSED").count(),
             "completed": Ticket.objects.filter(status="COMPLETED").count(),
+            "in_progress": Ticket.objects.filter(status="IN_PROGRESS").count(),
             "total_tickets": Ticket.objects.count(),
         }
         return Response(data)
@@ -474,6 +474,7 @@ class SDCDashboardStatsAPIView(APIView):
             "approved": Ticket.objects.filter(status="APPROVED", domain=user_domain).count(),
             "in_progress": Ticket.objects.filter(status="IN_PROGRESS", domain=user_domain).count(),
             "completed": Ticket.objects.filter(status="COMPLETED", domain=user_domain).count(),
+            "closed": Ticket.objects.filter(status="CLOSED", domain=user_domain).count(),
             "total_tickets": Ticket.objects.filter(domain=user_domain).count(),
         }
 
