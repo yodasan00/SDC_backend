@@ -74,3 +74,6 @@ def get_domains(request):
         }
         for d in domains
     ])
+
+
+

@@ -41,7 +41,8 @@ INSTALLED_APPS = [
     'corsheaders',
     'rest_framework',
     'login',
-    'tickets'
+    'tickets',
+    'drf_spectacular'
 ]
 
 MIDDLEWARE = [
@@ -81,11 +82,11 @@ WSGI_APPLICATION = 'backend.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'SDC',
+        'NAME': 'sdc',
         'USER': 'postgres',
-        'PASSWORD': '22csec15',
+        'PASSWORD': 'norules0000',
         'HOST': 'localhost', 
-        'PORT': '5432',       
+        'PORT': '9999',       
     }
 }
 
@@ -144,6 +145,7 @@ from datetime import timedelta
 
 REST_FRAMEWORK = {
 
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 
      'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.IsAuthenticated',
@@ -168,3 +170,11 @@ CORS_ALLOWED_ORIGINS = [
 
 # Optional: If you want to allow credentials (cookies/auth headers)
 CORS_ALLOW_CREDENTIALS = True
+
+
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'SDC Backend API',
+    'DESCRIPTION': 'API documentation for SDC system',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+}
